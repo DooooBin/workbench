@@ -572,10 +572,10 @@ function getWeekBlocks(weekKey) {
 
     // 工作日晨间
     if (dow >= 1 && dow <= 5) {
-      arr.push({ id:'read', time:'07:00', title:'读经 + 送老婆', desc:'7:40 到家', type:'fixed', checkinId:'read' });
-      arr.push({ id:'morning', time:'07:40', title:'听圣经 + 自重轻训练', desc:'动物流/俯卧撑/卷腹 + 做饭', type:'fixed', checkinId:'morning' });
+      arr.push({ id:'read', time:'07:00', title:'起床做饭', desc:'', type:'fixed', checkinId:'read' });
+      arr.push({ id:'morning', time:'07:40', title:'听圣经 + 自重轻训练', desc:'动物流/俯卧撑/卷腹', type:'fixed', checkinId:'morning' });
     } else {
-      arr.push({ id:'read', time:'07:00', title:'读经', desc:'周末不用送老婆', type:'fixed', checkinId:'read' });
+      arr.push({ id:'read', time:'07:00', title:'起床做饭', desc:'', type:'fixed', checkinId:'read' });
     }
 
     // 饮食窗口
@@ -1478,11 +1478,6 @@ function startupChecks() {
 
 startupChecks();
 render();
-
-/* ============================================
-   一些手动维护的 DOM 查询（某些地方用 $$ 有兼容问题）
-   ============================================ */
-function $$(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
 
 </script>
 </body>
