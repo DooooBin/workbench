@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>个人工作台</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-card2: #232340;
+    --bg-input: #2a2a45;
+    --text: #e8e8f0;
+    --text-muted: #9a9ab0;
+    --text-dim: #6b6b85;
+    --border: #2e2e4a;
+    --brand: #ff6b35;
+    --brand2: #f7931e;
+    --accent: #00d4aa;
+    --danger: #ff4d6a;
+    --warn: #ffb020;
+    --done: #4ade80;
+    --tab-active: #ff6b35;
+    --tab-inactive: #6b6b85;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    font-size: 15px; line-height: 1.5; overflow-x: hidden;
+  }
+  body {
+    max-width: 520px; margin: 0 auto; min-height: 100vh;
+    padding-bottom: 60px; position: relative;
+  }
+  /* === 通用 === */
+  .page { display: none; padding: 12px 14px 20px; animation: fadeIn .2s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card {
+    background: var(--bg-card); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 10px; border: 1px solid var(--border);
+  }
+  .card-title { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: var(--text); }
+  .card-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 9px 16px; border-radius: 8px; font-size: 14px;
+    border: none; cursor: pointer; transition: all .15s; font-weight: 500;
+    background: var(--bg-input); color: var(--text);
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:active { background: var(--brand2); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-tiny { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  input, textarea, select {
+    width: 100%; background: var(--bg-input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; outline: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--brand); }
+  textarea { resize: vertical; min-height: 60px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+  .row-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    background: var(--bg-input); color: var(--text-muted); font-size: 12px;
+  }
+  .tag-brand { background: rgba(255,107,53,.15); color: var(--brand); }
+  .tag-accent { background: rgba(0,212,170,.15); color: var(--accent); }
+  .tag-warn { background: rgba(255,176,32,.15); color: var(--warn); }
+  .tag-danger { background: rgba(255,77,106,.15); color: var(--danger); }
+  .tag-done { background: rgba(74,222,128,.15); color: var(--done); }
+  .empty { text-align: center; padding: 30px 20px; color: var(--text-dim); font-size: 14px; }
+  .divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  /* === 顶部 === */
+  .top-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--bg); padding: 14px 14px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .top-title { font-size: 17px; font-weight: 700; }
+  .top-date { font-size: 12px; color: var(--text-muted); }
+  .top-right { display: flex; gap: 8px; }
+
+  /* === 提醒横幅 === */
+  .alert-banner {
+    padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px; animation: slideIn .3s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+  .alert-danger { background: rgba(255,77,106,.12); border: 1px solid rgba(255,77,106,.35); color: var(--danger); }
+  .alert-warn { background: rgba(255,176,32,.12); border: 1px solid rgba(255,176,32,.35); color: var(--warn); }
+  .alert-info { background: rgba(0,212,170,.1); border: 1px solid rgba(0,212,170,.3); color: var(--accent); }
+  .alert-brand { background: rgba(255,107,53,.12); border: 1px solid rgba(255,107,53,.35); color: var(--brand); }
+
+  /* === 时间轴 === */
+  .timeline-item {
+    display: flex; gap: 12px; padding: 12px 14px; margin-bottom: 8px;
+    background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);
+    position: relative;
+  }
+  .timeline-item.done { opacity: .45; }
+  .timeline-item.done .tl-main-text { text-decoration: line-through; }
+  .timeline-item.active { border-color: var(--brand); box-shadow: 0 0 0 1px rgba(255,107,53,.3); }
+  .tl-time { font-size: 13px; color: var(--text-muted); min-width: 52px; padding-top: 1px; }
+  .tl-body { flex: 1; }
+  .tl-title { font-weight: 500; font-size: 14px; }
+  .tl-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .tl-action { align-self: center; }
+
+  /* === Tab 栏 === */
+  .tabbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 520px; background: var(--bg-card);
+    border-top: 1px solid var(--border); display: flex; z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0 6px; font-size: 11px; color: var(--tab-inactive);
+    cursor: pointer; transition: color .15s;
+  }
+  .tab.active { color: var(--tab-active); }
+  .tab svg { width: 22px; height: 22px; margin-bottom: 2px; }
+
+  /* === 周表 === */
+  .week-grid { display: flex; flex-direction: column; gap: 6px; }
+  .week-row { display: flex; gap: 4px; }
+  .week-cell {
+    flex: 1; min-height: 60px; background: var(--bg-card); border-radius: 8px;
+    padding: 6px; font-size: 11px; border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 3px; cursor: pointer;
+  }
+  .week-cell.today { border-color: var(--brand); background: rgba(255,107,53,.08); }
+  .week-day-head { text-align: center; font-weight: 600; font-size: 12px; color: var(--text); padding: 4px 0; }
+  .wc-block { padding: 2px 5px; border-radius: 4px; font-size: 10px; line-height: 1.3; }
+  .wc-fixed { background: var(--bg-input); color: var(--text-muted); }
+  .wc-fitness { background: rgba(255,107,53,.15); color: var(--brand); }
+  .wc-task { background: rgba(0,212,170,.12); color: var(--accent); }
+  .wc-course { background: rgba(255,176,32,.15); color: var(--warn); }
+  .wc-lesson { background: rgba(168,85,247,.15); color: #a855f7; }
+
+  /* === 选题 === */
+  .idea-card {
+    background: var(--bg-card); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 8px; border: 1px solid var(--border); cursor: pointer;
+  }
+  .idea-card:active { background: var(--bg-card2); }
+  .idea-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+  .idea-meta { font-size: 11px; color: var(--text-dim); display: flex; gap: 6px; flex-wrap: wrap; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 16px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .section-title::before { content: ''; width: 3px; height: 14px; background: var(--brand); border-radius: 2px; }
+
+  /* === 备课 === */
+  .lesson-block { margin-bottom: 14px; }
+  .lesson-block-title { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+  .lesson-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    background: var(--bg-input); border-radius: 6px; margin-bottom: 5px; font-size: 13px;
+  }
+  .lesson-item .drag { color: var(--text-dim); cursor: move; }
+  .library-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .lib-item {
+    padding: 8px 10px; background: var(--bg-input); border-radius: 6px; cursor: pointer;
+    font-size: 12px; border: 1px solid transparent;
+  }
+  .lib-item:active { border-color: var(--brand); }
+
+  /* === 记录 === */
+  .weight-row { display: flex; gap: 10px; }
+  .weight-input { flex: 1; text-align: center; font-size: 20px; font-weight: 600; padding: 14px 10px; }
+  .trend-strip { display: flex; gap: 4px; margin-top: 10px; }
+  .trend-bar {
+    flex: 1; background: var(--bg-input); border-radius: 3px; height: 40px; position: relative; overflow: hidden;
+  }
+  .trend-bar-fill {
+    position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, var(--brand), var(--brand2));
+    border-radius: 3px;
+  }
+  .trend-bar-label { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--text-dim); }
+  .trend-bar-val { position: absolute; top: 2px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--text-muted); font-weight: 500; }
+
+  /* === 弹窗 === */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-mask.show { display: flex; animation: maskIn .2s ease; }
+  @keyframes maskIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg-card); border-radius: 16px 16px 0 0;
+    padding: 18px 16px 24px; width: 100%; max-width: 520px;
+    max-height: 85vh; overflow-y: auto; animation: sheetUp .25s ease;
+  }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; }
+  .form-group { margin-bottom: 12px; }
+  .form-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; display: block; }
+
+  /* === 周日复盘 === */
+  .recap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .recap-item { background: var(--bg-input); border-radius: 8px; padding: 12px; text-align: center; }
+  .recap-num { font-size: 24px; font-weight: 700; color: var(--brand); }
+  .recap-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* === 饮食窗口 === */
+  .window-bar {
+    height: 24px; background: var(--bg-input); border-radius: 12px; overflow: hidden; position: relative;
+    border: 1px solid var(--border);
+  }
+  .window-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), #0ea5a0);
+    border-radius: 12px; position: relative;
+  }
+  .window-fill::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--warn); border-radius: 0 12px 12px 0;
+  }
+  .window-marker {
+    position: absolute; top: -2px; width: 3px; height: 28px;
+    background: var(--brand); border-radius: 2px;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ======= 底部 Tab ======= -->
+<div class="tabbar" id="tabbar">
+  <div class="tab active" data-tab="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
+    今天
+  </div>
+  <div class="tab" data-tab="week">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    周表
+  </div>
+  <div class="tab" data-tab="ideas">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+    选题
+  </div>
+  <div class="tab" data-tab="lesson">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+    备课
+  </div>
+  <div class="tab" data-tab="log">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+    记录
+  </div>
+</div>
+
+<!-- ======= 顶部 ======= -->
+<div class="top-bar">
+  <div>
+    <div class="top-title" id="pageTitle">今天</div><span style="font-size:10px;color:#ff6b35;border:1px solid #ff6b35;border-radius:4px;padding:1px 4px;margin-left:6px;vertical-align:middle;">v2</span>
+    <div class="top-date" id="pageDate"></div>
+  </div>
+  <div class="top-right">
+    <button class="btn btn-ghost btn-tiny" onclick="exportData()">导出</button>
+    <button class="btn btn-ghost btn-tiny" onclick="document.getElementById('importInput').click()">导入</button>
+    <input type="file" id="importInput" accept="application/json" style="display:none" onchange="importData(this)">
+  </div>
+</div>
+
+<!-- ======= 今天（首页） ======= -->
+<div class="page active" id="page-home">
+  <div id="homeAlerts"></div>
+  <div class="card" id="homeScheduleCard">
+    <div class="card-title">今日时间轴</div>
+    <div id="homeTimeline"></div>
+  </div>
+  <div id="homeTomorrow"></div>
+</div>
+
+<!-- ======= 周表 ======= -->
+<div class="page" id="page-week">
+  <div class="card">
+    <div class="row-between">
+      <div class="card-title" id="weekLabel"></div>
+      <div class="row-wrap" style="gap:6px;">
+        <span class="tag wc-fixed">固定块</span>
+        <span class="tag wc-fitness">健身</span>
+        <span class="tag wc-task">任务</span>
+        <span class="tag wc-course">跳绳课</span>
+        <span class="tag wc-lesson">搏击课</span>
+      </div>
+    </div>
+  </div>
+  <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<!-- ======= 选题库 ======= -->
+<div class="page" id="page-ideas">
+  <div class="card">
+    <div class="row-between">
+      <div>
+        <div class="card-title">储备 <span id="ideaCount" style="color:var(--brand)"></span></div>
+        <div class="card-sub">灵感 <span id="ideaInspire" style="color:var(--text)"></span> · 脚本 <span id="ideaScript" style="color:var(--text)"></span> · 已发 <span id="ideaPublished" style="color:var(--text)"></span></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openIdeaModal()">+ 新灵感</button>
+    </div>
+  </div>
+  <div class="section-title">灵感</div>
+  <div id="ideaList-inspire"></div>
+  <div class="section-title">已写脚本</div>
+  <div id="ideaList-script"></div>
+  <div class="section-title">已拍</div>
+  <div id="ideaList-shot"></div>
+  <div class="section-title">已发</div>
+  <div id="ideaList-published"></div>
+</div>
+
+<!-- ======= 备课 ======= -->
+<div class="page" id="page-lesson">
+  <div class="card">
+    <div class="row-between">
+      <div class="card-title">本周教案（<span id="lessonWeekLabel"></span>）</div>
+      <button class="btn btn-ghost btn-tiny" onclick="openHistoryModal()">历史课档</button>
+    </div>
+  </div>
+  <div id="lessonCards"></div>
+  <div class="section-title">内容库 <span id="libCount" style="font-weight:400;color:var(--text-dim);font-size:12px;"></span></div>
+  <div class="card">
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn btn-tiny" id="libTabSkipping" onclick="switchLib('skipping')" style="background:var(--brand);color:#fff;">跳绳</button>
+      <button class="btn btn-tiny" id="libTabFight" onclick="switchLib('fight')">搏击</button>
+      <button class="btn btn-tiny btn-ghost" style="margin-left:auto;" onclick="openLibItemModal()">+ 新增</button>
+    </div>
+    <div id="libraryList"></div>
+  </div>
+</div>
+
+<!-- ======= 记录 ======= -->
+<div class="page" id="page-log">
+  <div class="card">
+    <div class="card-title">体重记录（<span id="logDateLabel"></span>）</div>
+    <div class="weight-row">
+      <div style="flex:1;">
+        <div class="form-label" style="text-align:center;">早上 (kg)</div>
+        <input type="number" step="0.1" class="weight-input" id="weightMorning" placeholder="--" onchange="saveWeight()">
+      </div>
+      <div style="flex:1;">
+        <div class="form-label" style="text-align:center;">晚上 (kg)</div>
+        <input type="number" step="0.1" class="weight-input" id="weightEvening" placeholder="--" onchange="saveWeight()">
+      </div>
+    </div>
+    <div class="trend-strip" id="weightTrend"></div>
+  </div>
+  <div class="card">
+    <div class="row-between">
+      <div class="card-title" style="margin:0;">训练记录</div>
+      <button class="btn btn-primary btn-tiny" onclick="openTrainingModal()">+ 加动作</button>
+    </div>
+    <div id="trainingList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:8px;">饮食（16+8 窗口 9:00–17:00）</div>
+    <div class="window-bar" id="dietWindow"></div>
+    <input type="text" id="dietNote" placeholder="今天吃了什么（一句话）..." style="margin-top:10px;" onchange="saveDiet()">
+  </div>
+  <div class="card">
+    <div class="row-between" style="margin-bottom:8px;">
+      <div class="card-title" style="margin:0;">睡眠</div>
+      <span class="tag tag-accent" id="sleepDuration"></span>
+    </div>
+    <div class="row" style="gap:10px;">
+      <div style="flex:1;">
+        <div class="form-label">昨晚入睡时间</div>
+        <input type="time" id="sleepTime" onchange="saveSleep()">
+      </div>
+      <div style="flex:1;">
+        <div class="form-label">备注</div>
+        <input type="text" id="sleepNote" placeholder="质量如何..." onchange="saveSleep()">
+      </div>
+    </div>
+  </div>
+  <div class="card" id="weekRecapCard" style="display:none;">
+    <div class="card-title">本周训练复盘</div>
+    <div id="weekRecap"></div>
+  </div>
+</div>
+
+<!-- ======= 弹窗容器 ======= -->
+<div class="modal-mask" id="modalMask" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* ============================================
+   数据层：localStorage + 种子数据
+   ============================================ */
+const LS_KEY = 'workbench_v1';
+
+const DEFAULT_DATA = {
+  ideaCategories: ['学员趣事', '教练日常', '动作教学', '挑战', '反差'],
+  ideaTemplates: [
+    { name: '对标爆款结构·教学', hook: '3秒告诉你...', body: '动作拆解+常见错误', end: '关注我，下期教你...', shot: '健身房镜子前' },
+    { name: '对标爆款结构·搞笑', hook: '你见过最惨的教练是...', body: '学员翻车实拍', end: '笑死了，点个赞吧', shot: '上课现场' },
+  ],
+  library: [
+    // 跳绳基础
+    { id: 'sk1', type: 'skipping', name: '并脚跳', points: '双脚并拢，手腕摇绳，前脚掌落地', scene: '热身 / 基础教学' },
+    { id: 'sk2', type: 'skipping', name: '交替踏步跳', points: '左右脚轮流，像原地跑步', scene: '热身 / 节奏训练' },
+    { id: 'sk3', type: 'skipping', name: '单脚跳', points: '单脚连续跳，左右轮换', scene: '平衡 / 进阶' },
+    { id: 'sk4', type: 'skipping', name: '开合跳', points: '跳起分腿/并腿，配合摇绳', scene: '全身 / 热身' },
+    { id: 'sk5', type: 'skipping', name: '高抬腿跳', points: '膝盖抬到腰，快节奏', scene: '有氧 / 爆发力' },
+    { id: 'sk6', type: 'skipping', name: '前后跳', points: '并脚前后移动跳', scene: '协调性' },
+    { id: 'sk7', type: 'skipping', name: '左右跳', points: '并脚左右移动跳', scene: '协调性' },
+    // 跳绳花式
+    { id: 'sk8', type: 'skipping', name: '双摇（双飞）', points: '跳一次绳过两圈，跳高一点、手腕加速', scene: '进阶 / 表演' },
+    { id: 'sk9', type: 'skipping', name: '交叉跳', points: '胸前交叉手摇绳过绳，打开还原', scene: '花式 / 协调性' },
+    { id: 'sk10', type: 'skipping', name: '拳击步', points: '小碎步重心左右倒，拳击式节奏', scene: '趣味性' },
+    { id: 'sk11', type: 'skipping', name: '剪刀跳', points: '前后分腿交替，像剪刀', scene: '花式' },
+    { id: 'sk12', type: 'skipping', name: '钟摆跳', points: '并脚左右摆动像钟摆', scene: '协调性' },
+    { id: 'sk13', type: 'skipping', name: '侧甩接跳', points: '绳侧甩一下再打开跳，练节奏切换', scene: '花式 / 节奏' },
+    { id: 'sk14', type: 'skipping', name: '转身跳 180°', points: '跳起转身半圈，反方向继续', scene: '花式' },
+    { id: 'sk15', type: 'skipping', name: '一分钟计时赛', points: '计时计个数，分组 PK', scene: '游戏化 / 上周主题' },
+
+    // —— 跳绳·步法进阶 ——
+    { id: 'sk16', type: 'skipping', name: '前踢腿跳', points: '绳过顶后向前弹踢，弹踢脚全脚掌落地，另一腿后屈、脚尖向下', scene: '步法进阶' },
+    { id: 'sk17', type: 'skipping', name: '弓步跳', points: '过绳时成弓步，前腿弓、后腿绷，上身保持正直', scene: '步法进阶' },
+    { id: 'sk18', type: 'skipping', name: '左右甩绳', points: '绳摇到体侧甩，不过脚，左右各四次为一组；手腕放松、膝盖跟节奏弹', scene: '热身 / 新手第一步' },
+    { id: 'sk19', type: 'skipping', name: '后摇跳（反摇）', points: '绳子从后向前摇，其余同并脚跳；抬手容易，注意别砸脚', scene: '节奏变化' },
+
+    // —— 跳绳·花式 ——
+    { id: 'sk20', type: 'skipping', name: '前编花', points: '过绳一周后两小臂在体前交叉，再摇一周打开；交叉位置在身体前方、贴身体', scene: '花式代表作' },
+    { id: 'sk21', type: 'skipping', name: '后编花', points: '绳子从后向前交叉过绳，交叉点在体后腰部高度', scene: '花式进阶' },
+    { id: 'sk22', type: 'skipping', name: '交叉开合跳', points: '编花与开合组合，交叉时并腿、打开时开腿', scene: '花式组合' },
+    { id: 'sk23', type: 'skipping', name: '编花接双摇', points: '先编花一次，立刻跳高做双摇；手腕加速是关键', scene: '高年级 / 表演' },
+    { id: 'sk24', type: 'skipping', name: '转身跳 360°', points: '跳起转一整圈，落地继续同方向；先练180°再练360°', scene: '花式 / 表演' },
+    { id: 'sk25', type: 'skipping', name: '绳操（集体热身）', points: '把高抬腿、前踢腿、弓步、钟摆、开合交叉串成一套，配口令集体做', scene: '热身 / 集体整齐度' },
+
+    // —— 跳绳·两人一绳 ——
+    { id: 'sk26', type: 'skipping', name: '两人一绳交替跳', points: '两人各持一端，轮流跳过；两人同喊口令对齐节奏', scene: '合作 / 分组练习' },
+    { id: 'sk27', type: 'skipping', name: '朋友跳（一带一）', points: '一人摇绳，另一人并脚跳进去；摇绳人控制节奏，跳的人贴紧', scene: '合作 / 信任感' },
+    { id: 'sk28', type: 'skipping', name: '换位双人跳', points: '两人一起跳中互换位置，靠节奏一致完成', scene: '进阶合作' },
+
+    // —— 跳绳·长绳与团课游戏 ——
+    { id: 'sk29', type: 'skipping', name: '时光穿梭', points: '教练持绳，全队依次逐个跳过一个单摇；断绳处继续，不漏人', scene: '长绳游戏 / 破冰' },
+    { id: 'sk30', type: 'skipping', name: '长绳八字跳', points: '两人摇长绳，其余人成纵队依次跑进跳出，计时比成功次数', scene: '长绳游戏 / 最经典' },
+    { id: 'sk31', type: 'skipping', name: '四角跳长绳', points: '四人摇四根绳成方形，学生依次跳过四个绳（跳进跳出跳进跳出）', scene: '长绳游戏 / 高年级协作' },
+    { id: 'sk32', type: 'skipping', name: '跳绳猜拳接力', points: '两人在长绳里边跳边猜拳，赢的跑出、输的留下继续', scene: '长绳游戏 / 竞赛' },
+    { id: 'sk33', type: 'skipping', name: '猫抓老鼠', points: '两人在长绳里绕8字追逐，碰到即换角色', scene: '长绳游戏 / 趣味体能' },
+    { id: 'sk34', type: 'skipping', name: '跳绳中绳', points: '长绳里再跳短绳，双重节奏', scene: '长绳游戏 / 高手挑战' },
+    { id: 'sk35', type: 'skipping', name: '横扫千军', points: '一人站圆心持绳旋转，绳高到膝盖，圈内人跳起躲避，被碰到换角色', scene: '长绳游戏 / 气氛最好' },
+    { id: 'sk36', type: 'skipping', name: '跳蛇形绳', points: '圈内抖动长绳走蛇形，其他人躲闪跳，被碰到换持绳', scene: '长绳游戏 / 低年级' },
+    { id: 'sk37', type: 'skipping', name: '跳旋转绳', points: '两绳十字交叉旋转，圈内人跳起躲避；由慢到快', scene: '长绳游戏 / 进阶协作' },
+    { id: 'sk38', type: 'skipping', name: '跳竹竿舞', points: '绳当竹竿，跟"开—合"口令跳进跳出，可连成火车绕圈', scene: '长绳游戏 / 节奏与表演' },
+
+    // 搏击
+    { id: 'fg1', type: 'fight', name: '站架 + 滑步', points: '格斗站姿，前后左右移动不失重心', scene: '基础 / 每课必练' },
+    { id: 'fg2', type: 'fight', name: '前手刺拳', points: '快出快收，转脚送肩', scene: '距离控制 / 组合起点' },
+    { id: 'fg3', type: 'fight', name: '后手直拳', points: '后脚蹬地转胯，直线打出', scene: '核心重拳' },
+    { id: 'fg4', type: 'fight', name: '摆拳', points: '手臂微屈，横向抡摆，转脚转胯', scene: '近距离 / 迎击' },
+    { id: 'fg5', type: 'fight', name: '上勾拳', points: '屈膝下沉，自下向上发力', scene: '近距离 / 破抱架' },
+    { id: 'fg6', type: 'fight', name: '正蹬', points: '提膝蹬出，脚掌向前，控制距离', scene: '距离控制 / 反击' },
+    { id: 'fg7', type: 'fight', name: '低扫踢', points: '扫对方大腿，支撑脚外转', scene: '组合 / 削弱对手' },
+    { id: 'fg8', type: 'fight', name: '中扫踢（鞭腿）', points: '翻胯踢腰腹部，小腿鞭打', scene: '重击 / 核心腿法' },
+    { id: 'fg9', type: 'fight', name: '格挡', points: '双手护头，拍挡来拳', scene: '防守基础' },
+    { id: 'fg10', type: 'fight', name: '侧闪', points: '头向侧方移动躲直线拳', scene: '高级防守' },
+    { id: 'fg11', type: 'fight', name: '一二连击', points: '刺拳接后手直拳，最基础组合', scene: '组合入门' },
+    { id: 'fg12', type: 'fight', name: '拳腿组合', points: '一二连击接低扫踢', scene: '完整组合' },
+
+    // —— 搏击·进阶动作 ——
+    { id: 'fg13', type: 'fight', name: '侧踹', points: '提膝时上体略向支撑腿侧转，脚内侧与地面近平行；踢得越高身体侧倾越大', scene: '中远距离 / 拦截' },
+    { id: 'fg14', type: 'fight', name: '后撤步', points: '后脚先退前脚跟随，撤出对方拳距外立刻回位；撤时双手不掉', scene: '基础防守 / 距离' },
+    { id: 'fg15', type: 'fight', name: '提膝拦截', points: '提膝上顶挡住对方低扫，膝盖与大腿内侧迎向来腿', scene: '防守低扫' },
+    { id: 'fg16', type: 'fight', name: '上步刺拳', points: '前脚先动上步同时出刺拳，打完立刻回到原位；手脚同时到位', scene: '进距离 / 压迫' },
+    { id: 'fg17', type: 'fight', name: '三步组合（一二三）', points: '刺拳 - 后手直拳 - 前手摆拳；第三拳重心移前脚，肘稍抬与肩同高', scene: '组合进阶' },
+    { id: 'fg18', type: 'fight', name: '防反（格挡→后手直拳）', points: '拍挡来拳的同一瞬间蹬地转胯出后手直拳，防和攻一气呵成', scene: '实战意识 / 先防后攻' },
+    { id: 'fg19', type: 'fight', name: '打完就走', points: '打完连击立刻撤步或侧移离开原位，不站在原地等回击', scene: '实战习惯' },
+
+    // —— 搏击·团课练习法 ——
+    { id: 'fg20', type: 'fight', name: '靶训渐进表', points: '刺拳→后手拳→一二连击→上步刺拳→上步后手→打完就走→拳腿→防反；一次只加一步，教练持靶30~60秒轮换', scene: '每课必用 / 靶训' },
+    { id: 'fg21', type: 'fight', name: '木头人收拳', points: '教练喊"停"，所有人立刻定住并把拳收回脸侧；练收拳习惯', scene: '团课游戏 / 收拳' },
+    { id: 'fg22', type: 'fight', name: '影子对练', points: '两人面对面跟口令同步出拳，不接触，练节奏与距离感', scene: '团课游戏 / 无对抗' },
+    { id: 'fg23', type: 'fight', name: '抓尾巴', points: '腰后挂布条，只能靠步伐躲闪去抓对方，练移动与重心', scene: '团课游戏 / 步伐' },
+    { id: 'fg24', type: 'fight', name: '动作闯关', points: '打对一套动作升一级，5级通关；分组比谁先通关', scene: '团课游戏 / 竞赛' },
+  ],
+  lessons: [],           // { weekKey, type('skipping'|'fight'), theme, stretch:[], warmup:[], teach:[] }
+  lessonHistory: [],     // 归档教案
+  ideas: [               // 种子选题
+    { id: 'i1', title: '小孩跳绳翻车现场合集', category: '学员趣事', status: 'inspire', hook: '', body: '', end: '', shot: '', created: '' },
+    { id: 'i2', title: '新手练搏击的 3 个致命错误', category: '动作教学', status: 'script', hook: '99% 的新手第一节课就错了这 3 件事', body: '站架、握拳、发力...', end: '关注我，下期讲组合拳', shot: '健身房镜子前', created: '' },
+  ],
+  checkins: {},          // { date: { itemId: true/false } }
+  fitnessTimes: {},      // { date: '09:00' | null } 浮动健身时间
+  weights: {},           // { date: { morning: 70.5, evening: 71.2 } }
+  trainings: {},        // { date: [{ part, name, weight }] }
+  diets: {},             // { date: '一句话' }
+  sleeps: {},            // { date: { time: '23:30', note: '', duration: 7.5 } }
+  weekStart: '',         // 自动管理
+  weekArchiveDone: {},   // { weekKey: true } 避免重复归档
+};
+
+let DATA = loadData();
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // 合并默认字段（兼容老版本）
+      return Object.assign({}, DEFAULT_DATA, parsed);
+    }
+  } catch(e) {}
+  // 首次加载
+  const fresh = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  fresh.weekStart = getWeekKey(new Date());
+  fresh.lessons = fresh.defaultLessons ? fresh.defaultLessons : [];
+  return fresh;
+}
+function saveData() { localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
+
+/* ============================================
+   工具函数
+   ============================================ */
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+function pad(n) { return n<10 ? '0'+n : ''+n; }
+function todayStr(d=new Date()) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function getWeekKey(d=new Date()) {
+  // 周一为每周起始
+  const date = new Date(d);
+  const day = date.getDay() || 7;
+  date.setDate(date.getDate() - day + 1);
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate()+n);
+  return todayStr(d);
+}
+const WNAMES = ['周日','周一','周二','周三','周四','周五','周六'];
+
+function weekKeyToDisplay(wk) {
+  const d = new Date(wk);
+  return `${d.getMonth()+1}月${d.getDate()}日 那周`;
+}
+function nowHour() { return new Date().getHours(); }
+function nowMin() { return new Date().getMinutes(); }
+function nowHM() { return pad(nowHour()) + ':' + pad(nowMin()); }
+
+function genId(prefix='') { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+/* ============================================
+   周模板（固定每天的块）
+   ============================================ */
+function getWeekBlocks(weekKey) {
+  const blocks = {};  // dateStr -> [ { id, time, title, desc, type('fixed'|'fitness'|'task'|'course'|'lesson'), checkinId } ]
+  for (let i=0; i<7; i++) {
+    const dateStr = addDays(weekKey, i);
+    const d = new Date(dateStr);
+    const dow = d.getDay(); // 0=周日
+    const arr = [];
+
+    // 工作日晨间
+    if (dow >= 1 && dow <= 5) {
+      arr.push({ id:'read', time:'07:00', title:'读经 + 送老婆', desc:'7:40 到家', type:'fixed', checkinId:'read' });
+      arr.push({ id:'morning', time:'07:40', title:'听圣经 + 自重轻训练', desc:'动物流/俯卧撑/卷腹 + 做饭', type:'fixed', checkinId:'morning' });
+    } else {
+      arr.push({ id:'read', time:'07:00', title:'读经', desc:'周末不用送老婆', type:'fixed', checkinId:'read' });
+    }
+
+    // 饮食窗口
+    arr.push({ id:'diet', time:'09:00–17:00', title:'进食窗口', desc:'16+8 断食', type:'fixed', checkinId:'diet' });
+
+    // 固定课程
+    if (dow === 4 || dow === 5) { // 周四、五
+      arr.push({ id:'skipping', time:'17:00–18:20', title:'跳绳课', desc:'16:40 出门', type:'course', checkinId:'skipping' });
+    }
+    if (dow === 6 || dow === 0) { // 周六、日
+      arr.push({ id:'fight1', time:'10:00–11:50', title:'搏击课 1', desc:'', type:'lesson', checkinId:'fight' });
+      arr.push({ id:'fight2', time:'13:00–14:40', title:'搏击课 2', desc:'', type:'lesson', checkinId:'fight' });
+      arr.push({ id:'fight3', time:'15:00–16:20', title:'搏击课 3', desc:'课后加餐', type:'lesson', checkinId:'fight' });
+      arr.push({ id:'skipping', time:'17:00–18:20', title:'跳绳课', desc:'', type:'course', checkinId:'skipping' });
+    }
+
+    // 浮动健身（周一~周五上午/中午）
+    if (dow >= 1 && dow <= 5) {
+      const fitTime = DATA.fitnessTimes[dateStr];
+      arr.push({ id:'fitness', time: fitTime || '待定', title:'健身', desc: '和朋友，练后拉伸 15min', type:'fitness', checkinId:'fitness' });
+    }
+
+    // 任务块（每天）
+    if (dow !== 6 && dow !== 0) {  // 工作日学习+视频
+      arr.push({ id:'study', time:'下午', title:'学习 1h', desc:'', type:'task', checkinId:'study' });
+      arr.push({ id:'video', time:'下午/晚上', title:'视频 1h', desc:'写脚本/拍摄/剪辑', type:'task', checkinId:'video' });
+    }
+
+    // 周三下午：备课提醒
+    if (dow === 3) {
+      arr.push({ id:'lessonprep', time:'下午', title:'备课', desc:'本周跳绳+搏击教案', type:'task', checkinId:'lessonprep' });
+    }
+
+    blocks[dateStr] = arr;
+  }
+  return blocks;
+}
+
+/* ============================================
+   Tab 切换
+   ============================================ */
+const TAB_TITLES = { home:'今天', week:'周表', ideas:'选题库', lesson:'备课', log:'记录' };
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const name = tab.dataset.tab;
+    $$('.page').forEach(p => p.classList.remove('active'));
+    $('#page-'+name).classList.add('active');
+    $('#pageTitle').textContent = TAB_TITLES[name];
+    render();
+  });
+});
+
+/* ============================================
+   渲染入口
+   ============================================ */
+function render() {
+  $('#pageDate').textContent = `${todayStr()} ${WNAMES[new Date().getDay()]}`;
+  renderHome();
+  renderWeek();
+  renderIdeas();
+  renderLessons();
+  renderLog();
+}
+
+/* ============================================
+   今天（首页）
+   ============================================ */
+function renderHome() {
+  const dateStr = todayStr();
+  const weekBlocks = getWeekBlocks(DATA.weekStart);
+  const todayBlocks = weekBlocks[dateStr] || [];
+  const hour = nowHour();
+  const alerts = [];
+
+  // 提醒 1：选题不足
+  const ideaTotal = DATA.ideas.filter(i => i.status === 'inspire' || i.status === 'script').length;
+  if (ideaTotal < 8) alerts.push({ type:'warn', icon:'💡', text:`选题储备 ${ideaTotal}/8，该收灵感了` });
+
+  // 提醒 2：学习未打卡（21:00 后）
+  if (hour >= 21) {
+    if (!DATA.checkins[dateStr]?.study) alerts.push({ type:'danger', icon:'⚠️', text:'学习 1h 还没打卡！' });
+  }
+  // 提醒 3：连续红灯（查过去两天）
+  let missStreak = 0;
+  for (let i=1; i<=3; i++) {
+    const past = addDays(dateStr, -i);
+    if (!DATA.checkins[past]?.study) missStreak++; else break;
+  }
+  if (missStreak >= 2) alerts.push({ type:'danger', icon:'🔴', text:`学习连续 ${missStreak} 天没打！强制中断了` });
+
+  // 提醒 4：时间窗口
+  if (hour >= 16 && hour < 17) alerts.push({ type:'warn', icon:'⏰', text:'窗口快关了，16:30 后别再吃了' });
+  else if (hour >= 23) alerts.push({ type:'info', icon:'🌙', text:'该睡了，11点准时躺下' });
+  else if (hour >= 9 && hour < 10) alerts.push({ type:'info', icon:'🍳', text:'进食窗口开启，9点了早饭吃吧' });
+
+  // 提醒 5：周三下午备课
+  const dow = new Date(dateStr).getDay();
+  if (dow === 3 && hour >= 14) alerts.push({ type:'brand', icon:'📝', text:'该备课了，点这里去备课页' });
+
+  // 渲染提醒
+  $('#homeAlerts').innerHTML = alerts.map(a =>
+    `<div class="alert-banner alert-${a.type}">${a.icon} ${a.text}</div>`
+  ).join('');
+
+  // 时间轴
+  const checkins = DATA.checkins[dateStr] || {};
+  $('#homeTimeline').innerHTML = todayBlocks.map(b => {
+    const done = checkins[b.checkinId] && b.checkinId !== 'fitness';
+    const nowH = nowHour();
+    const nowActive = isBlockNowActive(b, nowH);
+    return `
+      <div class="timeline-item ${done?'done':''} ${nowActive?'active':''}">
+        <div class="tl-time">${b.time}</div>
+        <div class="tl-body">
+          <div class="tl-title tl-main-text">${b.title}</div>
+          ${b.desc ? `<div class="tl-desc">${b.desc}</div>` : ''}
+        </div>
+        ${b.checkinId && b.checkinId !== 'fitness' ? `
+          <div class="tl-action">
+            ${done ? `<span class="tag tag-done">✓</span>` : `<button class="btn btn-primary btn-tiny" onclick="doCheckin('${dateStr}','${b.checkinId}',this)">打卡</button>`}
+          </div>
+        ` : ''}
+        ${b.id === 'fitness' && !DATA.fitnessTimes[dateStr] ? `
+          <div class="tl-action">
+            <button class="btn btn-tiny btn-ghost" onclick="setFitnessTime('${dateStr}')">定时间</button>
+          </div>` : ''}
+        ${b.id === 'fitness' && DATA.fitnessTimes[dateStr] && !checkins.fitness ? `
+          <div class="tl-action">
+            <button class="btn btn-primary btn-tiny" onclick="doCheckin('${dateStr}','fitness',this)">打卡</button>
+          </div>` : ''}
+        ${b.id === 'fitness' && checkins.fitness ? `
+          <div class="tl-action"><span class="tag tag-done">✓</span></div>` : ''}
+      </div>`;
+  }).join('') || '<div class="empty">今天没有排块</div>';
+
+  // 排明天卡片
+  $('#homeTomorrow').innerHTML = '';
+  if (hour >= 20 && hour < 24) {
+    const tomorrow = addDays(dateStr, 1);
+    const tomBlocks = weekBlocks[tomorrow] || [];
+    const tomFitness = DATA.fitnessTimes[tomorrow];
+    $('#homeTomorrow').innerHTML = `
+      <div class="card" style="cursor:pointer;" onclick="planTomorrow('${tomorrow}')">
+        <div class="card-title">🕘 排明天（${WNAMES[new Date(tomorrow).getDay()]}）</div>
+        <div class="card-sub" style="margin-bottom:10px;">健身时间：${tomFitness || '未定'} · 点击排一下</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${tomBlocks.filter(b=>b.type!=='fitness').slice(0,6).map(b=>`<span class="tag">${b.time} ${b.title}</span>`).join('')}
+        </div>
+      </div>`;
+  }
+}
+
+function isBlockNowActive(b, nowH) {
+  if (b.time === '待定' || b.time.includes('–') || b.time.includes('下午') || b.time.includes('晚上')) {
+    if (b.type === 'fitness' || b.type === 'task') return false;
+  }
+  const h = parseInt(b.time) || 0;
+  return nowH === h;
+}
+
+function doCheckin(dateStr, itemId, btn) {
+  DATA.checkins[dateStr] = DATA.checkins[dateStr] || {};
+  DATA.checkins[dateStr][itemId] = true;
+  saveData();
+  render();
+  // 健身完成提示填训练记录
+  if (itemId === 'fitness') {
+    setTimeout(() => openTrainingModal(), 300);
+  }
+}
+
+function setFitnessTime(dateStr) {
+  openModal(`
+    <div class="modal-head"><div class="modal-title">定健身时间</div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <input type="time" id="fitTime">
+    <div class="row" style="gap:6px;margin-top:12px;flex-wrap:wrap;">
+      ${['09:00','10:00','11:00','12:00','13:00','14:00'].map(t=>`<button class="btn btn-tiny btn-ghost" onclick="document.getElementById('fitTime').value='${t}'">${t}</button>`).join('')}
+    </div>
+    <div class="row" style="margin-top:14px;gap:8px;">
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveFitnessTime('${dateStr}')">保存</button>
+    </div>
+  `);
+}
+function saveFitnessTime(dateStr) {
+  const t = $('#fitTime').value;
+  if (!t) return alert('选个时间');
+  DATA.fitnessTimes[dateStr] = t;
+  saveData();
+  closeModal();
+  render();
+}
+function planTomorrow(tomStr) {
+  setFitnessTime(tomStr);
+}
+
+/* ============================================
+   周表
+   ============================================ */
+function renderWeek() {
+  const wk = DATA.weekStart;
+  const start = new Date(wk);
+  $('#weekLabel').textContent = `${start.getMonth()+1}月${start.getDate()}日 – ${start.getMonth()+1}月${start.getDate()+6}日`;
+
+  const blocks = getWeekBlocks(wk);
+  const todayDate = todayStr();
+  const rows = [];
+
+  // 第一行：表头
+  let header = `<div class="week-row"><div class="week-day-head" style="min-width:52px;"></div>`;
+  for (let i=0; i<7; i++) {
+    const d = addDays(wk, i);
+    const dow = new Date(d).getDay();
+    const isToday = d === todayDate;
+    const wname = ['一','二','三','四','五','六','日'][i];
+    const mday = new Date(d).getDate();
+    header += `<div class="week-day-head">${wname}<br><span style="${isToday?'color:var(--brand)':''}">${mday}</span></div>`;
+  }
+  header += `</div>`;
+  rows.push(header);
+
+  // 关键块类型，每种一行
+  const ROW_TYPES = [
+    { key:'morning', label:'晨间' },
+    { key:'diet', label:'进食' },
+    { key:'fitness', label:'健身' },
+    { key:'study', label:'学习' },
+    { key:'video', label:'视频' },
+    { key:'skipping', label:'跳绳' },
+    { key:'fight', label:'搏击' },
+  ];
+
+  ROW_TYPES.forEach(rowType => {
+    let html = `<div class="week-row"><div style="width:52px;display:flex;align-items:center;font-size:12px;color:var(--text-muted);">${rowType.label}</div>`;
+    for (let i=0; i<7; i++) {
+      const d = addDays(wk, i);
+      const bs = blocks[d] || [];
+      const match = bs.filter(b => rowType.key === 'fight' ? b.checkinId === 'fight' : b.id === rowType.key);
+      const cellClass = d === todayDate ? 'week-cell today' : 'week-cell';
+      const fitTime = rowType.key === 'fitness' ? DATA.fitnessTimes[d] : null;
+      let inner = '';
+      match.forEach(b => {
+        let cls = 'wc-fixed';
+        if (b.type === 'fitness') cls = 'wc-fitness';
+        else if (b.type === 'task') cls = 'wc-task';
+        else if (b.type === 'course') cls = 'wc-course';
+        else if (b.type === 'lesson') cls = 'wc-lesson';
+        inner += `<div class="wc-block ${cls}">${fitTime || (rowType.key === 'fitness' ? '待定' : b.time.includes('–') ? '' : b.time)} ${b.title.replace('跳绳课','').replace('搏击课','').trim()}</div>`;
+      });
+      html += `<div class="${cellClass}" onclick="handleWeekCell('${d}','${rowType.key}')">${inner || '<span style="color:var(--text-dim);font-size:11px;">—</span>'}</div>`;
+    }
+    html += `</div>`;
+    rows.push(html);
+  });
+
+  $('#weekGrid').innerHTML = rows.join('');
+}
+
+function handleWeekCell(dateStr, rowKey) {
+  if (rowKey === 'fitness') setFitnessTime(dateStr);
+  else {
+    const isToday = dateStr === todayStr();
+    if (isToday) render();
+  }
+}
+
+/* ============================================
+   选题库
+   ============================================ */
+function renderIdeas() {
+  const all = DATA.ideas;
+  const counts = { inspire:0, script:0, shot:0, published:0 };
+  all.forEach(i => counts[i.status]++);
+  $('#ideaCount').textContent = counts.inspire + counts.script < 8 ? `(低！${counts.inspire+counts.script}/8)` : `(${counts.inspire+counts.script})`;
+  $('#ideaInspire').textContent = counts.inspire;
+  $('#ideaScript').textContent = counts.script;
+  $('#ideaPublished').textContent = counts.published;
+
+  const statusLabel = { inspire:'灵感', script:'已写脚本', shot:'已拍', published:'已发' };
+  ['inspire','script','shot','published'].forEach(s => {
+    const list = all.filter(i => i.status === s).sort((a,b) => (b.created||'').localeCompare(a.created||''));
+    $('#ideaList-'+s).innerHTML = list.length ? list.map(i => `
+      <div class="idea-card" onclick="openIdeaModal('${i.id}')">
+        <div class="idea-title">${i.title}</div>
+        <div class="idea-meta">
+          <span class="tag">${i.category || '未分类'}</span>
+          ${i.hook ? '<span class="tag tag-accent">有钩子</span>' : ''}
+          ${i.created ? `<span>${i.created.slice(5)}</span>` : ''}
+        </div>
+      </div>
+    `).join('') : '<div class="empty" style="padding:14px;">暂无</div>';
+  });
+}
+
+function openIdeaModal(id) {
+  const item = id ? DATA.ideas.find(i => i.id === id) : null;
+  const cats = DATA.ideaCategories || DEFAULT_DATA.ideaCategories;
+  const html = `
+    <div class="modal-head">
+      <div class="modal-title">${item ? '编辑选题' : '新灵感'}</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">一句话（标题）</div>
+      <input id="iTitle" placeholder="30 秒能说完的创意" value="${item?.title || ''}">
+    </div>
+    <div class="form-group">
+      <div class="form-label">分类</div>
+      <select id="iCategory">
+        ${cats.map(c => `<option ${item?.category===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">状态</div>
+      <select id="iStatus">
+        <option value="inspire" ${item?.status==='inspire'?'selected':''}>灵感（刚想到）</option>
+        <option value="script" ${item?.status==='script'?'selected':''}>已写脚本</option>
+        <option value="shot" ${item?.status==='shot'?'selected':''}>已拍</option>
+        <option value="published" ${item?.status==='published'?'selected':''}>已发</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="form-group">
+      <div class="form-label">钩子（前 3 秒说什么，决定别人会不会看完）</div>
+      <textarea id="iHook" placeholder="例：99% 的人跳绳都错了这一点...">${item?.hook || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">铺垫 / 正文</div>
+      <textarea id="iBody" placeholder="内容梗概...">${item?.body || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">反转 / 结尾</div>
+      <textarea id="iEnd" placeholder="收尾+引导关注...">${item?.end || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">拍摄备注（在哪、谁配合、道具）</div>
+      <input id="iShot" placeholder="例：健身房镜子前，和搭档小X" value="${item?.shot || ''}">
+    </div>
+    ${item ? `<button class="btn btn-danger btn-tiny" style="margin-bottom:10px;" onclick="deleteIdea('${item.id}')">删除这条</button>` : ''}
+    <div class="row" style="gap:8px;">
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveIdea('${item?.id || ''}')">保存</button>
+    </div>
+  `;
+  openModal(html);
+}
+function saveIdea(id) {
+  const title = $('#iTitle').value.trim();
+  if (!title) return alert('至少给个标题吧');
+  const payload = {
+    id: id || genId('i'),
+    title,
+    category: $('#iCategory').value,
+    status: $('#iStatus').value,
+    hook: $('#iHook').value,
+    body: $('#iBody').value,
+    end: $('#iEnd').value,
+    shot: $('#iShot').value,
+    created: todayStr(),
+  };
+  if (id) {
+    const idx = DATA.ideas.findIndex(i => i.id === id);
+    DATA.ideas[idx] = payload;
+  } else {
+    DATA.ideas.unshift(payload);
+  }
+  saveData(); closeModal(); render();
+}
+function deleteIdea(id) {
+  if (!confirm('确定删除？')) return;
+  DATA.ideas = DATA.ideas.filter(i => i.id !== id);
+  saveData(); closeModal(); render();
+}
+
+/* ============================================
+   备课
+   ============================================ */
+const STRETCH_DEFAULT = ['颈部环绕', '肩关节绕环', '手腕脚踝', '髋关节环绕', '猫牛式', '婴儿式放松', '腘绳肌拉伸', '股四头肌拉伸'];
+const WARMUP_SKIP = ['开合跳 2min', '垫步 1min', '交叉步 1min', '膝盖碰手 1min', '原地高抬腿 1min'];
+const WARMUP_FIGHT = ['原地慢跑 2min', '开合跳 1min', '跳绳 1min', '关节环绕', '空击刺拳 30s', '空击后手拳 30s'];
+
+function renderLessons() {
+  // 本周教案：确保两份都存在
+  const thisWeekLessons = DATA.lessons.filter(l => l.weekKey === DATA.weekStart);
+  if (thisWeekLessons.length === 0) {
+    // 新建两份
+    DATA.lessons.push(
+      { weekKey: DATA.weekStart, type: 'skipping', theme: '一分钟计时赛',
+        stretch: STRETCH_DEFAULT.slice(), warmup: WARMUP_SKIP.slice(), teach: [{ libId:'sk15', name:'一分钟计时赛', points:'计时计个数，分组 PK', scene:'游戏化 / 上周主题' }] },
+      { weekKey: DATA.weekStart, type: 'fight', theme: '实战',
+        stretch: STRETCH_DEFAULT.slice(), warmup: WARMUP_FIGHT.slice(), teach: [{ libId:'fg11', name:'一二连击', points:'刺拳接后手直拳', scene:'最基础组合' }] }
+    );
+    saveData();
+  }
+  const lessons = DATA.lessons.filter(l => l.weekKey === DATA.weekStart);
+  $('#lessonWeekLabel').textContent = weekKeyToDisplay(DATA.weekStart);
+
+  const typeName = { skipping:'跳绳', fight:'搏击' };
+  $('#lessonCards').innerHTML = lessons.map(l => `
+    <div class="card" style="cursor:pointer;" onclick="openLessonEditor('${l.id}')">
+      <div class="row-between">
+        <div>
+          <div class="card-title">${typeName[l.type]}教案</div>
+          <div class="card-sub">主题：${l.theme || '未填'}</div>
+        </div>
+        <div class="row-wrap" style="gap:4px;">
+          <span class="tag">拉伸 ${l.stretch?.length||0}</span>
+          <span class="tag">热身 ${l.warmup?.length||0}</span>
+          <span class="tag tag-brand">教学 ${l.teach?.length||0}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  renderLibrary(currentLibType);
+}
+
+let currentLibType = 'skipping';
+function switchLib(type) {
+  currentLibType = type;
+  $('#libTabSkipping').style.background = type==='skipping' ? 'var(--brand)' : '';
+  $('#libTabSkipping').style.color = type==='skipping' ? '#fff' : '';
+  $('#libTabFight').style.background = type==='fight' ? 'var(--brand)' : '';
+  $('#libTabFight').style.color = type==='fight' ? '#fff' : '';
+  renderLibrary(type);
+}
+function renderLibrary(type) {
+  const list = DATA.library.filter(l => l.type === type);
+  const sk = DATA.library.filter(l => l.type === 'skipping').length;
+  const fg = DATA.library.filter(l => l.type === 'fight').length;
+  $('#libCount').textContent = `（跳绳 ${sk} · 搏击 ${fg}）`;
+  $('#libraryList').innerHTML = `
+    <div class="library-grid">
+      ${list.map(l => `<div class="lib-item" onclick="openLibDetail('${l.id}')" title="${l.points||''}">${l.name}</div>`).join('')}
+    </div>
+  `;
+}
+function openLibDetail(id) {
+  const l = DATA.library.find(x => x.id === id);
+  openModal(`
+    <div class="modal-head">
+      <div class="modal-title">${l.name}</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">要点</div>
+      <textarea id="lPoints">${l.points || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">适用场景</div>
+      <input id="lScene" value="${l.scene || ''}">
+    </div>
+    <div class="row" style="gap:8px;">
+      <button class="btn btn-danger btn-tiny" style="margin-right:auto;" onclick="deleteLib('${id}')">删除</button>
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveLib('${id}')">保存</button>
+    </div>
+  `);
+}
+function openLibItemModal() {
+  openModal(`
+    <div class="modal-head">
+      <div class="modal-title">新增到内容库</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">类型</div>
+      <select id="nlType">
+        <option value="skipping" ${currentLibType==='skipping'?'selected':''}>跳绳</option>
+        <option value="fight" ${currentLibType==='fight'?'selected':''}>搏击</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">名称</div>
+      <input id="nlName" placeholder="例：后踢腿">
+    </div>
+    <div class="form-group">
+      <div class="form-label">要点</div>
+      <textarea id="nlPoints" placeholder="怎么做、发力在哪里..."></textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">适用场景</div>
+      <input id="nlScene" placeholder="例：热身 / 进阶 / 表演">
+    </div>
+    <div class="row" style="gap:8px;">
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveNewLib()">保存</button>
+    </div>
+  `);
+}
+function saveLib(id) {
+  const l = DATA.library.find(x => x.id === id);
+  l.points = $('#lPoints').value;
+  l.scene = $('#lScene').value;
+  saveData(); closeModal(); renderLibrary(l.type);
+}
+function deleteLib(id) {
+  if (!confirm('确定删除？')) return;
+  const l = DATA.library.find(x => x.id === id);
+  DATA.library = DATA.library.filter(x => x.id !== id);
+  saveData(); closeModal(); renderLibrary(l.type);
+}
+function saveNewLib() {
+  const name = $('#nlName').value.trim();
+  if (!name) return alert('填个名称');
+  DATA.library.push({
+    id: genId('l'),
+    type: $('#nlType').value,
+    name,
+    points: $('#nlPoints').value,
+    scene: $('#nlScene').value,
+  });
+  saveData(); closeModal(); renderLibrary(currentLibType);
+}
+
+function openLessonEditor(lid) {
+  const l = DATA.lessons.find(x => x.id === lid);
+  const lib = DATA.library.filter(x => x.type === l.type);
+  const typeName = l.type === 'skipping' ? '跳绳' : '搏击';
+
+  openModal(`
+    <div class="modal-head">
+      <div class="modal-title">${typeName}教案</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">主题</div>
+      <input id="leTheme" value="${l.theme || ''}" placeholder="一句话，如：一分钟计时赛 / 实战">
+    </div>
+
+    <div class="lesson-block">
+      <div class="lesson-block-title">① 拉伸 15'（勾选）</div>
+      ${(l.stretch || STRETCH_DEFAULT).map((s,i) => `
+        <div class="lesson-item">
+          <input type="checkbox" id="leStretch${i}" ${(l.stretchChecked||[]).includes(i)||l.stretchChecked===undefined?'checked':''}>
+          <input value="${s}" style="flex:1;background:transparent;border:none;color:var(--text);padding:4px;">
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="lesson-block">
+      <div class="lesson-block-title">② 热身 25'</div>
+      ${(l.warmup || []).map((w,i) => `
+        <div class="lesson-item">
+          <input value="${w}" id="leWarmup${i}" style="flex:1;background:transparent;border:none;">
+          <button class="btn btn-tiny btn-ghost" onclick="this.parentElement.remove()">删</button>
+        </div>
+      `).join('')}
+      <div class="row" style="margin-top:6px;gap:6px;">
+        <input id="leWarmupAdd" placeholder="加一个热身动作..." style="flex:1;">
+        <button class="btn btn-tiny" onclick="addWarmup('${lid}')">+ 添加</button>
+      </div>
+    </div>
+
+    <div class="lesson-block">
+      <div class="lesson-block-title">③ 教学 40'（详细步骤）</div>
+      ${(l.teach || []).map((t,i) => `
+        <div class="lesson-item">
+          <span class="tag">${i+1}</span>
+          <div style="flex:1;">
+            <div style="font-weight:500;">${t.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t.points || ''}</div>
+          </div>
+          <button class="btn btn-tiny btn-ghost" onclick="this.parentElement.remove()">删</button>
+        </div>
+      `).join('')}
+      <div class="row" style="margin-top:10px;margin-bottom:4px;">
+        <span class="form-label" style="margin:0;">从内容库挑一个加进去（点名字）</span>
+      </div>
+      <div class="library-grid">
+        ${lib.map(x => `<div class="lib-item" onclick="addTeach('${lid}','${x.id}')">+ ${x.name}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="row" style="gap:8px;">
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveLesson('${lid}')">保存教案</button>
+    </div>
+  `);
+}
+function addWarmup(lid) {
+  const val = $('#leWarmupAdd').value.trim();
+  if (!val) return;
+  const l = DATA.lessons.find(x => x.id === lid);
+  l.warmup = l.warmup || [];
+  l.warmup.push(val);
+  $('#leWarmupAdd').value = '';
+  openLessonEditor(lid);
+}
+function addTeach(lid, libId) {
+  const l = DATA.lessons.find(x => x.id === lid);
+  const item = DATA.library.find(x => x.id === libId);
+  if (!item) return;
+  l.teach = l.teach || [];
+  l.teach.push({ libId: item.id, name: item.name, points: item.points, scene: item.scene });
+  openLessonEditor(lid);
+}
+function saveLesson(lid) {
+  const l = DATA.lessons.find(x => x.id === lid);
+  l.theme = $('#leTheme').value;
+  // 拉伸：从 DOM 里找所有拉伸项
+  const stretchEls = $$('#modalContent .lesson-block').slice(0,1).flatMap(b => $$('.lesson-item', b));
+  l.stretch = stretchEls.map(el => {
+    const txt = el.querySelector('input')?.value || '';
+    return txt;
+  });
+  // 热身：第二个 block，input 前缀 leWarmup
+  l.warmup = [];
+  const wBlock = $$('#modalContent .lesson-block')[1];
+  if (wBlock) {
+    $$('input', wBlock).forEach(i => {
+      if (i.id && i.id.startsWith('leWarmup') && i.value.trim()) l.warmup.push(i.value);
+    });
+  }
+  // 教学：不重建（已经在 addTeach 时加好了），但需要从 DOM 删的过滤
+  // 简单做法：从 DOM 读
+  const teachBlock = $$('#modalContent .lesson-block')[2];
+  if (teachBlock) {
+    l.teach = [];
+    $$('.lesson-item', teachBlock).forEach((item, idx) => {
+      const name = item.querySelector('[style*="font-weight"]')?.textContent?.trim() || '';
+      const points = item.querySelector('[style*="margin-top"]')?.textContent?.trim() || '';
+      if (name) l.teach.push({ name, points });
+    });
+  }
+  saveData(); closeModal(); renderLessons();
+}
+
+function openHistoryModal() {
+  const hist = DATA.lessonHistory || [];
+  openModal(`
+    <div class="modal-head">
+      <div class="modal-title">历史课档</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    ${hist.length === 0 ? '<div class="empty">还没归档过教案（每周日晚自动归档）</div>' : hist.slice().reverse().map(h => `
+      <div class="idea-card" onclick="alert(JSON.stringify(h,null,2))">
+        <div class="idea-title">${h.theme || '未填'} · ${h.type==='skipping'?'跳绳':'搏击'} · ${weekKeyToDisplay(h.weekKey)}</div>
+        <div class="idea-meta">
+          <span>拉伸 ${h.stretch?.length||0}</span>
+          <span>热身 ${h.warmup?.length||0}</span>
+          <span>教学 ${h.teach?.length||0}</span>
+        </div>
+      </div>
+    `).join('')}
+  `);
+}
+
+/* ============================================
+   记录
+   ============================================ */
+function renderLog() {
+  const dateStr = todayStr();
+  $('#logDateLabel').textContent = dateStr + ' ' + WNAMES[new Date().getDay()];
+
+  // 体重
+  const w = DATA.weights[dateStr] || {};
+  $('#weightMorning').value = w.morning || '';
+  $('#weightEvening').value = w.evening || '';
+
+  // 近 7 天趋势
+  const trendData = [];
+  for (let i=6; i>=0; i--) {
+    const d = addDays(dateStr, -i);
+    const rec = DATA.weights[d] || {};
+    const v = rec.morning || rec.evening;
+    trendData.push({ date: d.slice(8), val: v });
+  }
+  const vals = trendData.filter(t => t.val).map(t => t.val);
+  const min = vals.length ? Math.min(...vals) - 1 : 0;
+  const max = vals.length ? Math.max(...vals) + 1 : 100;
+  $('#weightTrend').innerHTML = trendData.map(t => {
+    if (!t.val) return `<div class="trend-bar" style="opacity:.3;"><div class="trend-bar-label">${t.date}</div></div>`;
+    const pct = Math.max(8, Math.min(100, ((t.val - min) / (max - min)) * 100));
+    return `<div class="trend-bar">
+      <div class="trend-bar-label">${t.date}</div>
+      <div class="trend-bar-fill" style="height:${pct}%;"></div>
+      <div class="trend-bar-val">${t.val}</div>
+    </div>`;
+  }).join('');
+
+  // 训练列表
+  const trains = DATA.trainings[dateStr] || [];
+  $('#trainingList').innerHTML = trains.length ? trains.map((t,i) => `
+    <div class="lesson-item">
+      <span class="tag tag-brand">${t.part}</span>
+      <div style="flex:1;">
+        <div style="font-weight:500;font-size:13px;">${t.name}</div>
+      </div>
+      <span style="color:var(--accent);font-weight:600;">${t.weight}kg</span>
+      <button class="btn btn-tiny btn-ghost" onclick="removeTraining(${i})">删</button>
+    </div>
+  `).join('') : '<div class="empty" style="padding:14px;">今天还没记录训练</div>';
+
+  // 饮食窗口
+  const nowH = nowHour() + nowMin()/60;
+  const windowStart = 9, windowEnd = 17;
+  const pct = Math.max(0, Math.min(100, ((nowH - windowStart) / (windowEnd - windowStart)) * 100));
+  const isOpen = nowH >= windowStart && nowH <= windowEnd;
+  $('#dietWindow').innerHTML = `
+    <div class="window-fill" style="width:${windowEnd===windowStart?100:((windowEnd-windowStart)/24*100)}%;"></div>
+    ${isOpen ? `<div class="window-marker" style="left:calc(${pct}% - 1.5px);"></div>` : ''}
+  `;
+  $('#dietNote').value = DATA.diets[dateStr] || '';
+
+  // 睡眠
+  const s = DATA.sleeps[dateStr] || {};
+  $('#sleepTime').value = s.time || '';
+  $('#sleepNote').value = s.note || '';
+  if (s.time) {
+    const h = parseInt(s.time.split(':')[0]);
+    const m = parseInt(s.time.split(':')[1]) || 0;
+    const mins = (7 - ((h >= 12 ? h - 24 : h))) * 60 - m;
+    const dur = Math.abs(mins) / 60;
+    $('#sleepDuration').textContent = `约 ${dur.toFixed(1)} 小时`;
+  } else {
+    $('#sleepDuration').textContent = '待记录';
+  }
+
+  // 周日复盘
+  if (new Date().getDay() === 0) {
+    const weekBlocks = getWeekBlocks(DATA.weekStart);
+    let fitnessCount = 0;
+    const partCount = {};
+    let totalActions = 0;
+    for (let i=0; i<7; i++) {
+      const d = addDays(DATA.weekStart, i);
+      const t = DATA.trainings[d] || [];
+      if (t.length > 0) fitnessCount++;
+      t.forEach(item => {
+        partCount[item.part] = (partCount[item.part] || 0) + 1;
+        totalActions++;
+      });
+    }
+    const lessonCount = Object.values(DATA.checkins).reduce((sum, day) => sum + (day.fight ? 3 : 0) + (day.skipping ? 1 : 0), 0);
+    $('#weekRecapCard').style.display = '';
+    $('#weekRecap').innerHTML = `
+      <div class="recap-grid">
+        <div class="recap-item"><div class="recap-num">${fitnessCount}</div><div class="recap-label">健身次数</div></div>
+        <div class="recap-item"><div class="recap-num">${totalActions}</div><div class="recap-label">总动作数</div></div>
+        <div class="recap-item"><div class="recap-num">${lessonCount}</div><div class="recap-label">上课节数</div></div>
+        <div class="recap-item"><div class="recap-num">${Object.keys(partCount).length}</div><div class="recap-label">练过部位</div></div>
+      </div>
+      ${Object.keys(partCount).length ? `<div class="card-sub" style="margin-top:10px;">部位分布：${Object.entries(partCount).map(([k,v])=>`${k}×${v}`).join(' / ')}</div>` : ''}
+    `;
+  } else {
+    $('#weekRecapCard').style.display = 'none';
+  }
+}
+
+function saveWeight() {
+  const dateStr = todayStr();
+  DATA.weights[dateStr] = DATA.weights[dateStr] || {};
+  DATA.weights[dateStr].morning = parseFloat($('#weightMorning').value) || null;
+  DATA.weights[dateStr].evening = parseFloat($('#weightEvening').value) || null;
+  saveData(); renderLog();
+}
+function saveDiet() {
+  DATA.diets[todayStr()] = $('#dietNote').value;
+  saveData();
+}
+function saveSleep() {
+  DATA.sleeps[todayStr()] = {
+    time: $('#sleepTime').value,
+    note: $('#sleepNote').value,
+  };
+  saveData(); renderLog();
+}
+
+const PART_OPTIONS = ['胸', '背', '腿', '肩', '手臂', '核心', '全身'];
+function openTrainingModal() {
+  openModal(`
+    <div class="modal-head">
+      <div class="modal-title">+ 训练动作</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">部位</div>
+      <select id="trPart">
+        ${PART_OPTIONS.map(p => `<option>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">动作名称</div>
+      <input id="trName" placeholder="例：卧推 / 深蹲 / 硬拉">
+    </div>
+    <div class="form-group">
+      <div class="form-label">重量 (kg)</div>
+      <input type="number" step="0.5" id="trWeight" placeholder="60">
+    </div>
+    <div class="row" style="gap:8px;">
+      <button class="btn" onclick="closeModal()" style="flex:1">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveTraining()">保存</button>
+    </div>
+  `);
+}
+function saveTraining() {
+  const name = $('#trName').value.trim();
+  if (!name) return alert('填个动作名');
+  const dateStr = todayStr();
+  DATA.trainings[dateStr] = DATA.trainings[dateStr] || [];
+  DATA.trainings[dateStr].push({
+    part: $('#trPart').value,
+    name,
+    weight: parseFloat($('#trWeight').value) || 0,
+  });
+  saveData(); closeModal(); renderLog();
+}
+function removeTraining(idx) {
+  const dateStr = todayStr();
+  DATA.trainings[dateStr].splice(idx, 1);
+  saveData(); renderLog();
+}
+
+/* ============================================
+   导入导出
+   ============================================ */
+function exportData() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `工作台备份-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const json = JSON.parse(e.target.result);
+      if (!confirm('导入会覆盖当前数据，确定吗？')) return;
+      DATA = Object.assign({}, DEFAULT_DATA, json);
+      saveData(); location.reload();
+    } catch(err) {
+      alert('文件读不了：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* ============================================
+   弹窗底层
+   ============================================ */
+function openModal(html) {
+  $('#modalContent').innerHTML = html;
+  $('#modalMask').classList.add('show');
+}
+function closeModal() {
+  $('#modalMask').classList.remove('show');
+}
+
+/* ============================================
+   启动：跨周归档检查 + 初始渲染
+   ============================================ */
+function startupChecks() {
+  const today = todayStr();
+  const todayWeek = getWeekKey(new Date());
+
+  // 跨周检测（周一 = 换周）
+  if (todayWeek !== DATA.weekStart) {
+    // 归档上周教案
+    const lastWeekKey = DATA.weekStart;
+    const lastWeekLessons = DATA.lessons.filter(l => l.weekKey === lastWeekKey);
+    if (lastWeekLessons.length > 0 && !DATA.weekArchiveDone[lastWeekKey]) {
+      DATA.lessonHistory = DATA.lessonHistory || [];
+      lastWeekLessons.forEach(l => {
+        DATA.lessonHistory.push({ ...l });
+      });
+      DATA.weekArchiveDone[lastWeekKey] = true;
+    }
+    DATA.weekStart = todayWeek;
+    saveData();
+  }
+
+  // 内容库版本迁移：把新增的种子动作补进已有数据（已删掉的不会复活）
+  const LIB_VERSION = 'v2';
+  if (DATA.librarySeeded !== LIB_VERSION) {
+    const exists = new Set(DATA.library.map(l => l.id));
+    DEFAULT_DATA.library.forEach(l => {
+      if (!exists.has(l.id)) DATA.library.push(JSON.parse(JSON.stringify(l)));
+    });
+    DATA.librarySeeded = LIB_VERSION;
+    saveData();
+  }
+
+  // 首次启动，初始化一些种子检查
+  if (!DATA.library.length) {
+    DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    DATA.weekStart = todayWeek;
+    saveData();
+  }
+}
+
+startupChecks();
+render();
+
+/* ============================================
+   一些手动维护的 DOM 查询（某些地方用 $$ 有兼容问题）
+   ============================================ */
+function $$(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
+
+</script>
+</body>
+</html>
